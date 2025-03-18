@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi Em</title>
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        canvas {
+            position: absolute;
+        }
+        .heart-image {
+            position: absolute;
+            top: 45%; /* Điều chỉnh vị trí để cân đối hơn */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px; /* Tăng kích thước ảnh */
+            height: 200px;
+            object-fit: cover; /* Đảm bảo ảnh không bị méo */
+            clip-path: path('M 100 20 C 70 -10 0 -10 0 70 C 0 140 100 190 100 190 C 100 190 200 140 200 70 C 200 -10 130 -10 100 20 Z'); /* Tạo hình trái tim */
+            z-index: 2;
+            animation: heartbeat 1.5s infinite ease-in-out;
+            
+        }
+        @keyframes heartbeat {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+        
+        
+        .text {
+            font-family: 'Pacifico', cursive;
+            position: absolute;
+            bottom: 50px; /* Hạ chữ xuống xa hơn */
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px red;
+        }
+        button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    #audioContainer {
+    display: none;
+}
+
+    </style>
+</head>
+<body>
+    <button id="playButton">Bật nhạc</button>
+    <audio id="myAudio">
+        <source src="Tuan.mp3" type="audio/mpeg">
+    </audio>
+    <canvas id="heartCanvas"></canvas>
+    <img src="IMG_4146.jpg" alt="Heart Image" class="heart-image">
+    <div class="text">I LOVE YOU</div>
+    
+    <script>
+        
+        document.addEventListener("click", function() {
+    var audio = document.getElementById("myAudio");
+    audio.play();
+    audio.muted = false;
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    var audio = document.getElementById("myAudio");
+    var playButton = document.getElementById("playButton");
+    var isPlaying = false; // Biến kiểm tra trạng thái nhạc
+
+    function toggleAudio() {
+        if (isPlaying) {
+            audio.pause(); // Dừng nhạc
+            isPlaying = false;
+            playButton.innerText = "Bật nhạc"; // Cập nhật text nút
+        } else {
+            audio.play(); // Phát nhạc
+            audio.muted = false;
+            isPlaying = true;
+            playButton.innerText = "Tắt nhạc"; // Cập nhật text nút
+        }
+    }
+
+    playButton.addEventListener("click", toggleAudio);
+});
+
+
+        const canvas = document.getElementById("heartCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const numParticles = 20000; 
+        function heartShape(t) {
+            return {
+                x: 16 * Math.pow(Math.sin(t), 3),
+                y: -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))
+            };
+        }
+        for (let i = 0; i < numParticles; i++) {
+            let t = Math.random() * Math.PI * 2;
+            let heart = heartShape(t);
+            particles.push({
+                x: canvas.width / 2 + heart.x * 20,
+                y: canvas.height / 2.5 + heart.y * 20,
+                size: Math.random() * 3 + 1,
+                opacity: Math.random() * 0.8 + 0.2,
+                speedX: (Math.random() - 0.5) * 1,
+                speedY: (Math.random() - 0.5) * 1,
+                life: Math.random() * 150 + 50
+            });
+        }
+        function drawHeart(x, y, size, opacity) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.bezierCurveTo(x - size, y - size, x - size * 2, y + size / 2, x, y + size);
+            ctx.bezierCurveTo(x + size * 2, y + size / 2, x + size, y - size, x, y);
+            ctx.fill();
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+               drawHeart(p.x, p.y, p.size, p.opacity);
+                ctx.beginPath();
+              
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.opacity -= 0.005;
+                p.size -= 0.01;
+                p.life--;
+                if (p.opacity <= 0 || p.size <= 0 || p.life <= 0) {
+                    let t = Math.random() * Math.PI * 2;
+                    let heart = heartShape(t);
+                    particles[index] = {
+                        x: canvas.width / 2 + heart.x * 20,
+                        y: canvas.height / 2.5 + heart.y * 20,
+                        size: Math.random() * 3 + 1,
+                        opacity: Math.random() * 0.8 + 0.2,
+                        speedX: (Math.random() - 0.5) * 1,
+                        speedY: (Math.random() - 0.5) * 1,
+                        life: Math.random() * 150 + 50
+                    };
+                }
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+    </script>
+</body>
+
+</html>
